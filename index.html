@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <title>Registrasi STIT DARUL FATAH</title>
+</head>
+<body class="bg-light p-4">
+  <div class="container bg-white p-4 rounded shadow" style="max-width: 600px;">
+    <h3 class="text-center text-primary">STIT DARUL FATAH</h3>
+    <hr>
+    <form id="regForm">
+      <input type="text" name="nama" class="form-control mb-2" placeholder="Nama Lengkap" required>
+      <input type="text" name="nim" class="form-control mb-2" placeholder="NIM" required>
+      <select name="semester" class="form-select mb-2"><option value="2">Semester 2</option><option value="4">Semester 4</option></select>
+      <textarea name="matkul" class="form-control mb-2" placeholder="Daftar Mata Kuliah"></textarea>
+      <label>Upload Bukti Transfer:</label>
+      <input type="file" id="fileInput" class="form-control mb-3" required>
+      <button type="submit" class="btn btn-primary w-100">Kirim & Download PDF</button>
+    </form>
+    <div id="loader" class="text-center mt-3" style="display:none;">Sedang memproses...</div>
+  </div>
+
+  <script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzzpMj23fkeAieX3X8ufPRFBT18ZtLr0HCxoH-Lpbh6veISQpHYDSGbEHNf47syLWEx/exec';
+
+    document.getElementById('regForm').addEventListener('submit', e => {
+      e.preventDefault();
+      document.getElementById('loader').style.display = 'block';
+      
+      const file = document.getElementById('fileInput').files[0];
+      const reader = new FileReader();
+      
+      reader.onload = function() {
+        const formData = {
+          nama: document.querySelector('[name="nama"]').value,
+          nim: document.querySelector('[name="nim"]').value,
+          semester: document.querySelector('[name="semester"]').value,
+          matkul: document.querySelector('[name="matkul"]').value,
+          fileData: reader.result
+        };
+
+        fetch(scriptURL, {
+          method: 'POST',
+          body: JSON.stringify(formData)
+        })
+        .then(res => res.json())
+        .then(response => {
+          document.getElementById('loader').style.display = 'none';
+          if(response.result === "success") {
+            window.open(response.url, '_blank');
+            alert("Berhasil! PDF akan terbuka di tab baru.");
+          }
+        })
+        .catch(error => alert("Gagal mengirim data!"));
+      };
+      reader.readAsDataURL(file);
+    });
+  </script>
+</body>
+</html>
