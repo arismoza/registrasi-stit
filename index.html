@@ -1,106 +1,73 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Registrasi STIT DARUL FATAH</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-  <style>
-    body { background: #f0f2f5; padding: 15px; font-family: 'Segoe UI', sans-serif; }
-    .reg-card { max-width: 600px; margin: auto; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; }
-    .header { background: #1a5f7a; color: white; padding: 25px; text-align: center; }
-    .section-title { border-left: 5px solid #1a5f7a; padding-left: 10px; margin: 20px 0; font-weight: bold; color: #1a5f7a; }
-    #loader { display: none; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrasi STIT DF</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body { background: #f8f9fa; padding: 20px; }
+        .card { max-width: 500px; margin: auto; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .card-header { background: #1a5f7a; color: white; text-align: center; border-radius: 15px 15px 0 0 !important; }
+    </style>
 </head>
 <body>
-  <div class="reg-card">
-    <div class="header">
-      <h4>STIT DARUL FATAH</h4>
-      <p class="mb-0">Formulir Registrasi Mahasiswa</p>
-    </div>
-    <div class="p-4">
-      <form id="regForm">
-        <div class="section-title">IDENTITAS</div>
-        <div class="mb-3"><label class="form-label">Nama Lengkap</label><input type="text" name="nama" class="form-control" required></div>
-        <div class="mb-3"><label class="form-label">NIM</label><input type="text" name="nim" class="form-control" required></div>
-        
-        <div class="section-title">AKADEMIK</div>
-        <div class="mb-3">
-          <label class="form-label">Semester Selanjutnya</label>
-          <select name="semester" class="form-select" required>
-            <option value="">-- Pilih --</option>
-            <option>2</option><option>4</option><option>6</option><option>8</option>
-          </select>
+    <div class="card">
+        <div class="card-header p-3"><h4>STIT DARUL FATAH</h4></div>
+        <div class="card-body">
+            <form id="regForm">
+                <div class="mb-3"><label>Nama Lengkap</label><input type="text" name="nama" class="form-control" required></div>
+                <div class="mb-3"><label>NIM</label><input type="text" name="nim" class="form-control" required></div>
+                <div class="mb-3"><label>Semester Baru</label>
+                    <select name="semester" class="form-select"><option>2</option><option>4</option><option>6</option><option>8</option></select>
+                </div>
+                <div class="mb-3"><label>Daftar Mata Kuliah (Pisahkan dengan koma)</label>
+                    <textarea name="matkul" class="form-control" rows="3" placeholder="Contoh: IPA, IPS, SKI..."></textarea>
+                </div>
+                <div class="mb-3"><label>Tanggal Bayar</label><input type="date" name="tglTransfer" class="form-control" required></div>
+                <div class="mb-3"><label>Upload Bukti Transfer</label><input type="file" id="bukti" class="form-control" required></div>
+                <button type="submit" class="btn btn-primary w-100 p-2">KIRIM & DOWNLOAD PDF</button>
+            </form>
+            <div id="status" class="mt-3 text-center"></div>
         </div>
-
-        <label class="form-label fw-bold">Mata Kuliah Semester Sebelumnya (10 Kolom)</label>
-        <div class="row row-cols-2 g-2 mb-3" id="matkulContainer">
-          </div>
-
-        <div class="section-title">PEMBAYARAN</div>
-        <div class="mb-3"><label class="form-label">Tanggal Transfer</label><input type="date" name="tglTransfer" class="form-control" required></div>
-        <div class="mb-3"><label class="form-label">Upload Bukti (JPG/PDF)</label><input type="file" id="fileInput" class="form-control" required></div>
-
-        <button type="submit" class="btn btn-primary w-100 p-3 mt-3 shadow">KIRIM & DOWNLOAD PDF</button>
-      </form>
-
-      <div id="loader" class="text-center mt-3">
-        <div class="spinner-border text-primary"></div>
-        <p>Sedang memproses data...</p>
-      </div>
-      <div id="result" class="mt-3"></div>
     </div>
-  </div>
 
-  <script>
-    // Membuat 10 kolom mata kuliah otomatis
-    const container = document.getElementById('matkulContainer');
-    for(let i=1; i<=10; i++) {
-      container.innerHTML += `<div class="col"><input type="text" name="matkul${i}" class="form-control form-control-sm" placeholder="Matkul ${i}"></div>`;
-    }
+    <script>
+        const form = document.getElementById('regForm');
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const status = document.getElementById('status');
+            status.innerHTML = "Sedang memproses... Mohon tunggu.";
+            
+            const file = document.getElementById('bukti').files[0];
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = async () => {
+                const payload = {
+                    nama: form.nama.value,
+                    nim: form.nim.value,
+                    semester: form.semester.value,
+                    matkul: form.matkul.value,
+                    tglTransfer: form.tglTransfer.value,
+                    buktiTransfer: {
+                        base64: reader.result.split(',')[1],
+                        type: file.type,
+                        name: file.name
+                    }
+                };
 
-    const form = document.getElementById('regForm');
-    form.onsubmit = async (e) => {
-      e.preventDefault();
-      document.getElementById('loader').style.display = 'block';
-      
-      const file = document.getElementById('fileInput').files[0];
-      const reader = new FileReader();
-      
-      reader.onload = async function() {
-        const payload = {
-          nama: form.nama.value,
-          nim: form.nim.value,
-          semester: form.semester.value,
-          tglTransfer: form.tglTransfer.value,
-          buktiTransfer: {
-            base64: reader.result.split(',')[1],
-            type: file.type,
-            name: file.name
-          }
+                // GANTI DENGAN LINK /EXEC KAMU
+                const url = 'https://script.google.com/macros/s/AKfycbzzpMj23fkeAieX3X8ufPRFBT18ZtLr0HCxoH-Lpbh6veISQpHYDSGbEHNf47syLWEx/exec';
+
+                try {
+                    const response = await fetch(url, { method: 'POST', body: JSON.stringify(payload) });
+                    const res = await response.json();
+                    if(res.status === 'success') {
+                        status.innerHTML = `<div class="alert alert-success">Berhasil!<br><a href="${res.url}" target="_blank" class="btn btn-success mt-2">DOWNLOAD PDF</a></div>`;
+                    } else { status.innerHTML = "Error: " + res.message; }
+                } catch (err) { status.innerHTML = "Gagal terhubung ke server."; }
+            };
         };
-        // Menambahkan matkul ke payload
-        for(let i=1; i<=10; i++) { payload['matkul'+i] = form['matkul'+i].value; }
-
-        // GANTI URL DI BAWAH INI DENGAN LINK /EXEC GOOGLE KAMU
-        const webAppUrl = 'https://script.google.com/macros/s/AKfycbzzpMj23fkeAieX3X8ufPRFBT18ZtLr0HCxoH-Lpbh6veISQpHYDSGbEHNf47syLWEx/exec';
-
-        try {
-          const response = await fetch(webAppUrl, {
-            method: 'POST',
-            body: JSON.stringify(payload)
-          });
-          const result = await response.json();
-          document.getElementById('loader').style.display = 'none';
-          document.getElementById('result').innerHTML = `<div class="alert alert-success text-center">Berhasil!<br><a href="${result.url}" target="_blank" class="btn btn-success mt-2">Download PDF</a></div>`;
-        } catch (err) {
-          alert("Gagal mengirim data. Pastikan Web App diset ke 'Anyone'.");
-          document.getElementById('loader').style.display = 'none';
-        }
-      };
-      reader.readAsDataURL(file);
-    };
-  </script>
+    </script>
 </body>
 </html>
